@@ -5,3 +5,9 @@ target
 **/*.rs.bk
 node_modules
 test-ledger
+.vscode
+wallet
+.env
+# script
+package-lock.json
+yarn.lock

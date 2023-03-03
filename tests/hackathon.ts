@@ -1,16 +1,106 @@
-import * as anchor from "@project-serum/anchor";
-import { Program } from "@project-serum/anchor";
-import { Hackathon } from "../target/types/hackathon";
+import { AnchorProvider, BN, Program, setProvider, web3, workspace } from "@project-serum/anchor"
+import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token"
+import { Hackathon } from "../target/types/hackathon"
+import {
+	airdrop,
+	createMintTransaction,
+	mintToTransaction,
+	sendAndConfirmTransaction,
+	systemProgram,
+	time,
+	tokenProgram,
+} from "./utils/common"
+import { createProposal, grantAdminTransaction, initializeTransaction, revokeAdminTransaction } from "./utils/hackathon"
 
 describe("hackathon", () => {
-  // Configure the client to use the local cluster.
-  anchor.setProvider(anchor.AnchorProvider.env());
+	let provider = AnchorProvider.env()
+	setProvider(provider)
 
-  const program = anchor.workspace.Hackathon as Program<Hackathon>;
+	let hackathonProgram = workspace.Hackathon as Program<Hackathon>
+	let { connection } = hackathonProgram.provider
+	let wallet: web3.Keypair = web3.Keypair.fromSecretKey(Uint8Array.from(require("../wallet/deployer.json")))
+	let walletTokenAccount: web3.PublicKey
+	let user: web3.Keypair = new web3.Keypair()
+	let userTokenAccount: web3.PublicKey
+	let tokenVote: web3.Keypair = web3.Keypair.generate()
 
-  it("Is initialized!", async () => {
-    // Add your test here.
-    const tx = await program.methods.initialize().rpc();
-    console.log("Your transaction signature", tx);
-  });
-});
+	before(async () => {
+		await airdrop(connection, user.publicKey)
+
+		await sendAndConfirmTransaction(
+			connection,
+			[wallet, tokenVote],
+			[await createMintTransaction(connection, wallet.publicKey, tokenVote.publicKey, 0)]
+		)
+
+		let transaction: web3.Transaction = new web3.Transaction()
+
+		walletTokenAccount = await getAssociatedTokenAddress(tokenVote.publicKey, wallet.publicKey)
+		if ((await connection.getAccountInfo(walletTokenAccount)) == null) {
+			transaction.add(
+				createAssociatedTokenAccountInstruction(
+					wallet.publicKey,
+					walletTokenAccount,
+					wallet.publicKey,
+					tokenVote.publicKey
+				)
+			)
+		}
+		transaction.add(await mintToTransaction(tokenVote.publicKey, wallet.publicKey, walletTokenAccount, 5000000))
+		await sendAndConfirmTransaction(connection, [wallet], [transaction])
+	})
+
+	it("Initialize", async () => {
+		await sendAndConfirmTransaction(
+			connection,
+			[wallet],
+			[await initializeTransaction(hackathonProgram, wallet.publicKey)]
+		)
+	})
+
+	it("Grant admin", async () => {
+		await sendAndConfirmTransaction(
+			connection,
+			[wallet],
+			[await grantAdminTransaction(hackathonProgram, wallet.publicKey, user.publicKey)]
+		)
+	})
+
+	it("Revoke admin", async () => {
+		await sendAndConfirmTransaction(
+			connection,
+			[wallet],
+			[await revokeAdminTransaction(hackathonProgram, wallet.publicKey, user.publicKey)]
+		)
+	})
+
+	it("Create proposal", async () => {
+		const now = Math.floor(new Date().getTime() / 1000)
+		const start = now + 10 * 60
+		const end = start + 100
+		await sendAndConfirmTransaction(
+			connection,
+			[wallet],
+			[
+				await createProposal(
+					hackathonProgram,
+					wallet.publicKey,
+					wallet.publicKey,
+					tokenVote.publicKey,
+					"Proposal title",
+					"Proposal description",
+					new BN(start),
+					new BN(end),
+					0,
+					5,
+					2,
+					500,
+					1,
+					systemProgram,
+					tokenProgram,
+					time
+				),
+			]
+		)
+	})
+})
