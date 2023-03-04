@@ -1,7 +1,14 @@
-import { BN, Program, web3 } from "@project-serum/anchor"
-import { getAssociatedTokenAddressSync } from "@solana/spl-token"
-import { Hackathon } from "../../target/types/hackathon"
-import { systemProgram } from "./common"
+import { web3, utils, Program, BN } from "@project-serum/anchor"
+import {
+	createInitializeMintInstruction,
+	createMintToInstruction,
+	getAssociatedTokenAddressSync,
+	getMinimumBalanceForRentExemptAccount,
+	MINT_SIZE,
+	TOKEN_PROGRAM_ID,
+} from "@solana/spl-token"
+import { Hackathon } from "../idl/hackathon"
+import { systemProgram } from "./constants"
 
 export async function initializeTransaction(
 	hackathonProgram: Program<Hackathon>,
@@ -225,4 +232,18 @@ export async function claimTransaction(
 	)
 
 	return transaction
+}
+
+export async function sendAndConfirmTransaction(
+	connection: web3.Connection,
+	signers: web3.Signer[],
+	transactions: (web3.Transaction | web3.TransactionInstruction)[],
+	transaction: web3.Transaction = new web3.Transaction()
+): Promise<string> {
+	transaction.add(...transactions)
+	return web3.sendAndConfirmTransaction(connection, transaction, signers)
+}
+
+export const sleep = (s: number) => {
+	return new Promise((resolve) => setTimeout(resolve, s * 1000))
 }

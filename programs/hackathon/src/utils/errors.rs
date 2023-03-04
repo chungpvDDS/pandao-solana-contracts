@@ -28,6 +28,12 @@ pub enum ErrorCode {
     NumberOptionNotMatchProposalType,
     #[msg("Hackathon: The current timestamp cannot vote")]
     NowCannotVote,
+    #[msg("Hackathon: The vote is already claimed")]
+    IsAlreadyClaimed,
+    #[msg("Hackathon: The current timestamp cannot claim")]
+    NowCannotClaim,
+    #[msg("Hackathon: Nothing to claim")]
+    NothingToClaim,
     // #[msg("TreasureStorage: Change type not supported")]
     // NotSupportedChangeType,
     // #[msg("TreasureStorage: Nft type did not supported")]

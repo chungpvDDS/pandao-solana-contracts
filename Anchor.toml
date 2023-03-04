@@ -1,15 +1,17 @@
 [features]
 seeds = false
 skip-lint = false
+[programs.testnet]
+hackathon = "6HzSgqLgUCFKSs48EPMWtuE5GznKTqMJQPxNMnqHNC41"
 [programs.devnet]
-hackathon = "8mt8v8cLzM8NziTsZTbC7FzVpmZA5fWp297GjjLteWMB"
+hackathon = "6HzSgqLgUCFKSs48EPMWtuE5GznKTqMJQPxNMnqHNC41"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "devnet"
-wallet = "/home/dds-019/.config/solana/id.json"
+wallet = "/Users/chung/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"

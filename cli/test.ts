@@ -1,30 +1,20 @@
 import { AnchorProvider, BN, Program, setProvider, web3, workspace } from "@project-serum/anchor"
 import { createAssociatedTokenAccountInstruction, getAssociatedTokenAddress } from "@solana/spl-token"
-import { Hackathon } from "../target/types/hackathon"
+import { associatedTokenProgram, hackathonProgram, systemProgram, time, tokenProgram } from "./helpers/constants"
 import {
-	airdrop,
-	associatedTokenProgram,
-	createMintTransaction,
-	mintToTransaction,
 	sendAndConfirmTransaction,
-	systemProgram,
-	time,
-	tokenProgram,
-} from "./utils/common"
-import {
 	claimTransaction,
 	createProposal,
 	grantAdminTransaction,
 	initializeTransaction,
 	revokeAdminTransaction,
 	voteTransaction,
-} from "./utils/hackathon"
+} from "./helpers/common"
 
 describe("hackathon", () => {
 	let provider = AnchorProvider.env()
 	setProvider(provider)
 
-	let hackathonProgram = workspace.Hackathon as Program<Hackathon>
 	let { connection } = hackathonProgram.provider
 	let wallet: web3.Keypair = web3.Keypair.fromSecretKey(Uint8Array.from(require("../wallet/deployer.json")))
 	let walletTokenAccount: web3.PublicKey
@@ -32,46 +22,7 @@ describe("hackathon", () => {
 	let userTokenAccount: web3.PublicKey
 	let tokenVote: web3.Keypair = web3.Keypair.generate()
 
-	before(async () => {
-		await airdrop(connection, user.publicKey)
-
-		await sendAndConfirmTransaction(
-			connection,
-			[wallet, tokenVote],
-			[await createMintTransaction(connection, wallet.publicKey, tokenVote.publicKey, 0)]
-		)
-
-		let transaction: web3.Transaction = new web3.Transaction()
-
-		walletTokenAccount = await getAssociatedTokenAddress(tokenVote.publicKey, wallet.publicKey)
-		if ((await connection.getAccountInfo(walletTokenAccount)) == null) {
-			transaction.add(
-				createAssociatedTokenAccountInstruction(
-					wallet.publicKey,
-					walletTokenAccount,
-					wallet.publicKey,
-					tokenVote.publicKey
-				)
-			)
-		}
-		transaction.add(await mintToTransaction(tokenVote.publicKey, wallet.publicKey, walletTokenAccount, 5000000))
-		await sendAndConfirmTransaction(connection, [wallet], [transaction])
-
-		transaction = new web3.Transaction()
-		userTokenAccount = await getAssociatedTokenAddress(tokenVote.publicKey, user.publicKey)
-		if ((await connection.getAccountInfo(userTokenAccount)) == null) {
-			transaction.add(
-				createAssociatedTokenAccountInstruction(
-					user.publicKey,
-					userTokenAccount,
-					user.publicKey,
-					tokenVote.publicKey
-				)
-			)
-		}
-		transaction.add(await mintToTransaction(tokenVote.publicKey, wallet.publicKey, userTokenAccount, 5000000))
-		await sendAndConfirmTransaction(connection, [user, wallet], [transaction])
-	})
+	before(async () => {})
 
 	it("Initialize", async () => {
 		await sendAndConfirmTransaction(
@@ -153,7 +104,7 @@ describe("hackathon", () => {
 				]
 			)
 		} catch (error) {
-			console.log(error.logs);
+			console.log(error.logs)
 		}
 	})
 
@@ -182,7 +133,7 @@ describe("hackathon", () => {
 				]
 			)
 		} catch (error) {
-			console.log(error.logs);
+			console.log(error.logs)
 		}
 	})
 })

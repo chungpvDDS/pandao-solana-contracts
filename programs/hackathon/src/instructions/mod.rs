@@ -9,3 +9,6 @@ pub use create_proposal::*;
 
 pub mod vote;
 pub use vote::*;
+
+pub mod claim;
+pub use claim::*;

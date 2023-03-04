@@ -8,7 +8,7 @@ pub use utils::*;
 pub mod instructions;
 pub use instructions::*;
 
-declare_id!("8mt8v8cLzM8NziTsZTbC7FzVpmZA5fWp297GjjLteWMB");
+declare_id!("6HzSgqLgUCFKSs48EPMWtuE5GznKTqMJQPxNMnqHNC41");
 
 #[program]
 pub mod hackathon {
@@ -50,5 +50,13 @@ pub mod hackathon {
             threshold,
             max_options_per_vote,
         )
+    }
+
+    pub fn vote(ctx: Context<Vote>, options: String) -> Result<()> {
+        vote::exec(ctx, options)
+    }
+
+    pub fn claim(ctx: Context<Claim>) -> Result<()> {
+        claim::exec(ctx)
     }
 }
